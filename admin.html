@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ritty's Palace — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0a0a08; --black2:#111110; --black3:#1a1a16;
+  --gold:#c8972a; --gold2:#e0b84a; --gold-light:#f0e0b0;
+  --cream:#faf6ee; --mid:#7a7060; --muted:#5a5448;
+  --green:#1e7a4a; --red:#a23a2e; --amber:#a2772e;
+  --wa:#25D366;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);min-height:100vh}
+
+/* ── LOGIN SCREEN ── */
+.login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%,#1a1600 0%,#0a0a08 65%);
+  padding:1.5rem;
+}
+.login-box{
+  width:100%;max-width:380px;background:var(--black2);
+  border:1px solid rgba(200,151,42,.2);padding:3rem 2.2rem;
+  text-align:center;
+}
+.login-crest{
+  width:64px;height:64px;border:1.5px solid var(--gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1.4rem;
+}
+.login-crest svg{width:28px;height:28px}
+.login-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--gold2);margin-bottom:.3rem}
+.login-sub{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:2rem}
+.login-box input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(200,151,42,.2);
+  padding:.85rem 1rem;font-family:'Jost',sans-serif;font-size:.9rem;color:var(--cream);
+  outline:none;margin-bottom:1rem;text-align:center;letter-spacing:.15em;
+}
+.login-box input:focus{border-color:var(--gold)}
+.login-btn{
+  width:100%;background:var(--gold);color:var(--black);border:none;
+  padding:.85rem;font-family:'Jost',sans-serif;font-size:.78rem;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .2s;
+}
+.login-btn:hover{background:var(--gold2)}
+.login-error{color:#e07a6b;font-size:.78rem;margin-top:1rem;display:none}
+.login-hint{margin-top:1.6rem;font-size:.7rem;color:var(--muted);line-height:1.6}
+
+/* ── ADMIN APP ── */
+.admin-app{display:none}
+.admin-app.show{display:block}
+
+/* TOP BAR */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2rem;background:rgba(10,10,8,.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(200,151,42,.15);
+}
+.topbar-brand{display:flex;align-items:center;gap:.7rem}
+.topbar-crest{width:34px;height:34px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.topbar-crest svg{width:16px;height:16px}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--gold2)}
+.topbar-sub{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.topbar-actions{display:flex;gap:.7rem;align-items:center}
+.btn-ghost{
+  background:none;border:1px solid rgba(200,151,42,.25);color:var(--gold-light);
+  padding:.55rem 1.1rem;font-family:'Jost',sans-serif;font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.btn-gold-sm{
+  background:var(--gold);color:var(--black);border:none;
+  padding:.55rem 1.2rem;font-family:'Jost',sans-serif;font-size:.7rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;
+  display:flex;align-items:center;gap:.4rem;white-space:nowrap;
+}
+.btn-gold-sm:hover{background:var(--gold2)}
+.btn-gold-sm svg{width:14px;height:14px}
+
+/* DASHBOARD STATS */
+.dash-stats{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;
+  padding:1.5rem 2rem;
+}
+.stat-card{
+  background:var(--black2);border:1px solid rgba(200,151,42,.12);
+  padding:1.2rem 1.3rem;
+}
+.stat-card-num{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold2);line-height:1}
+.stat-card-label{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.4rem}
+.stat-card.warn .stat-card-num{color:var(--amber)}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  padding:0 2rem 1.2rem;
+}
+.tabs-row{display:flex;gap:.4rem;flex-wrap:wrap}
+.cat-tab{
+  background:var(--black2);border:1px solid rgba(200,151,42,.15);color:var(--muted);
+  padding:.5rem 1rem;font-family:'Jost',sans-serif;font-size:.7rem;letter-spacing:.08em;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;
+}
+.cat-tab.active{background:var(--gold);color:var(--black);border-color:var(--gold);font-weight:600}
+.cat-tab:hover:not(.active){border-color:rgba(200,151,42,.4);color:var(--gold-light)}
+.search-box{
+  background:var(--black2);border:1px solid rgba(200,151,42,.15);
+  padding:.5rem 1rem;font-family:'Jost',sans-serif;font-size:.78rem;color:var(--cream);
+  outline:none;min-width:200px;
+}
+.search-box:focus{border-color:rgba(200,151,42,.4)}
+.search-box::placeholder{color:var(--muted)}
+
+/* PRODUCT TABLE */
+.table-wrap{padding:0 2rem 3rem;overflow-x:auto}
+.product-table{width:100%;border-collapse:collapse;min-width:920px}
+.product-table thead th{
+  text-align:left;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);padding:.8rem 1rem;border-bottom:1px solid rgba(200,151,42,.2);
+  font-weight:500;
+}
+.product-table tbody tr{border-bottom:1px solid rgba(200,151,42,.08);transition:background .15s}
+.product-table tbody tr:hover{background:rgba(200,151,42,.04)}
+.product-table td{padding:.8rem 1rem;font-size:.82rem;vertical-align:middle}
+.prod-thumb{width:50px;height:62px;object-fit:cover;background:var(--black3);border:1px solid rgba(200,151,42,.15)}
+.prod-name-cell{display:flex;align-items:center;gap:.8rem}
+.prod-name-text{font-family:'Playfair Display',serif;font-size:.92rem;color:var(--cream)}
+.prod-cat-text{font-size:.68rem;color:var(--muted);margin-top:.15rem}
+.price-text{color:var(--gold2);font-weight:500}
+.price-old{text-decoration:line-through;color:var(--muted);font-size:.74rem;margin-right:.3rem}
+.size-pills{display:flex;flex-wrap:wrap;gap:.3rem;max-width:160px}
+.size-pill{background:rgba(200,151,42,.1);border:1px solid rgba(200,151,42,.2);padding:.15rem .5rem;font-size:.68rem;color:var(--gold-light)}
+
+.status-badge{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .7rem;
+  font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;cursor:pointer;
+  border:1px solid transparent;transition:all .2s;
+}
+.status-badge.in-stock{background:rgba(30,122,74,.15);color:#5fd393;border-color:rgba(30,122,74,.4)}
+.status-badge.out-stock{background:rgba(162,58,46,.15);color:#e08070;border-color:rgba(162,58,46,.4)}
+.status-badge.backorder{background:rgba(162,119,46,.15);color:#e0b06a;border-color:rgba(162,119,46,.4)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.row-actions{display:flex;gap:.5rem}
+.icon-btn{
+  background:none;border:1px solid rgba(200,151,42,.2);color:var(--gold-light);
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;
+}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold2);background:rgba(200,151,42,.08)}
+.icon-btn.danger:hover{border-color:#a23a2e;color:#e08070;background:rgba(162,58,46,.08)}
+.icon-btn svg{width:14px;height:14px}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-state svg{width:48px;height:48px;margin-bottom:1rem;opacity:.4}
+.empty-state-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold-light);margin-bottom:.5rem}
+
+/* ── MODAL (Add/Edit Product) ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;
+  display:none;align-items:flex-start;justify-content:center;
+  padding:2rem 1rem;overflow-y:auto;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:var(--black2);border:1px solid rgba(200,151,42,.25);
+  max-width:560px;width:100%;margin-top:1rem;
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.4rem 1.8rem;border-bottom:1px solid rgba(200,151,42,.15);
+}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold2);font-weight:400}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--cream)}
+.modal-body{padding:1.6rem 1.8rem;max-height:70vh;overflow-y:auto}
+.modal-footer{padding:1.2rem 1.8rem;border-top:1px solid rgba(200,151,42,.15);display:flex;gap:.8rem}
+
+.form-group{margin-bottom:1.1rem}
+.form-group label{display:block;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(200,151,42,.18);
+  padding:.7rem .9rem;font-family:'Jost',sans-serif;font-size:.85rem;color:var(--cream);outline:none;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold)}
+.form-group select option{background:var(--black3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-hint{font-size:.68rem;color:var(--muted);margin-top:.4rem}
+
+.size-input-row{display:flex;gap:.5rem;margin-bottom:.6rem}
+.size-input-row input{flex:1}
+.size-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.size-chip{
+  background:rgba(200,151,42,.1);border:1px solid rgba(200,151,42,.25);
+  padding:.35rem .7rem;font-size:.75rem;color:var(--gold-light);
+  display:flex;align-items:center;gap:.5rem;
+}
+.size-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;padding:0}
+.size-chip button:hover{color:#e08070}
+
+.upload-zone{
+  border:1.5px dashed rgba(200,151,42,.3);padding:1.5rem;text-align:center;
+  cursor:pointer;position:relative;transition:all .2s;background:rgba(200,151,42,.02);
+}
+.upload-zone:hover{border-color:rgba(200,151,42,.55)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-zone-text{font-size:.78rem;color:var(--muted)}
+.upload-zone-text strong{display:block;color:var(--gold);margin-bottom:.2rem;font-size:.82rem}
+.img-preview-wrap{position:relative;margin-top:.8rem;display:none}
+.img-preview-wrap img{width:100%;max-height:200px;object-fit:cover;border:1px solid rgba(200,151,42,.2)}
+.img-preview-remove{position:absolute;top:.4rem;right:.4rem;background:rgba(0,0,0,.7);color:#fff;border:none;width:24px;height:24px;border-radius:50%;cursor:pointer}
+
+.availability-options{display:flex;gap:.6rem;flex-wrap:wrap}
+.avail-opt{
+  flex:1;min-width:120px;background:rgba(255,255,255,.03);border:1px solid rgba(200,151,42,.18);
+  padding:.7rem .8rem;cursor:pointer;transition:all .2s;text-align:center;
+}
+.avail-opt.selected{border-color:var(--gold);background:rgba(200,151,42,.1)}
+.avail-opt-label{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.2rem}
+.avail-opt[data-val="in-stock"].selected .avail-opt-label{color:#5fd393}
+.avail-opt[data-val="out-stock"].selected .avail-opt-label{color:#e08070}
+.avail-opt[data-val="backorder"].selected .avail-opt-label{color:#e0b06a}
+.avail-opt-desc{font-size:.64rem;color:var(--muted)}
+
+.backorder-field{display:none;margin-top:.9rem;padding:.9rem;background:rgba(200,119,46,.06);border:1px solid rgba(200,119,46,.2)}
+.backorder-field.show{display:block}
+
+.btn-cancel{flex:1;background:none;border:1px solid rgba(200,151,42,.2);color:var(--mid);padding:.8rem;font-family:'Jost',sans-serif;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:rgba(200,151,42,.4);color:var(--cream)}
+.btn-save{flex:2;background:var(--gold);color:var(--black);border:none;padding:.8rem;font-family:'Jost',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.btn-save:hover{background:var(--gold2)}
+
+/* DELETE CONFIRM MODAL */
+.confirm-box{max-width:380px}
+.confirm-icon{width:48px;height:48px;border:1.5px solid #a23a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:1.6rem auto 0}
+.confirm-text{text-align:center;padding:1rem 1.8rem 0;font-size:.85rem;color:var(--mid);line-height:1.6}
+.confirm-text strong{color:var(--cream)}
+
+/* EXPORT MODAL */
+.export-modal .modal-body{font-size:.84rem;color:var(--mid);line-height:1.8}
+.export-modal .modal-body strong{color:var(--gold-light)}
+.export-steps{margin-top:1rem;padding-left:0;list-style:none}
+.export-steps li{display:flex;gap:.8rem;margin-bottom:.9rem}
+.export-steps .num{width:22px;height:22px;border:1px solid rgba(200,151,42,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--gold);flex-shrink:0}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--black2);
+  color:var(--cream);padding:.85rem 1.4rem;font-size:.82rem;border-left:3px solid var(--gold);
+  max-width:300px;transform:translateY(10px);opacity:0;transition:all .3s;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .dash-stats{grid-template-columns:repeat(2,1fr);padding:1rem}
+  .topbar{padding:.9rem 1rem;flex-wrap:wrap;gap:.6rem}
+  .toolbar{padding:0 1rem 1rem}
+  .table-wrap{padding:0 1rem 2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-crest">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#c8972a" stroke-width="1.6"><path d="M12 2l2.5 5.5L20 9l-4 4 1 5.5L12 16l-5 2.5 1-5.5-4-4 5.5-1.5z"/></svg>
+    </div>
+    <div class="login-title">Ritty's Palace</div>
+    <div class="login-sub">Admin Access</div>
+    <input type="password" id="adminPassword" placeholder="Enter admin PIN" maxlength="20" onkeypress="if(event.key==='Enter')tryLogin()"/>
+    <button class="login-btn" onclick="tryLogin()">Sign In</button>
+    <div class="login-error" id="loginError">Incorrect PIN. Please try again.</div>
+    <div class="login-hint">Authorized access only.<br>Contact your developer if you've lost the PIN.</div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN APP ═══════════ -->
+<div class="admin-app" id="adminApp">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-crest">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#c8972a" stroke-width="1.6"><path d="M12 2l2.5 5.5L20 9l-4 4 1 5.5L12 16l-5 2.5 1-5.5-4-4 5.5-1.5z"/></svg>
+      </div>
+      <div>
+        <div class="topbar-title">Ritty's Palace</div>
+        <div class="topbar-sub">Product Manager</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="openExportModal()">Export Updated Site</button>
+      <button class="btn-ghost" onclick="logout()">Log Out</button>
+      <button class="btn-gold-sm" onclick="openAddModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Product
+      </button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD STATS -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <div class="stat-card-num" id="statTotal">0</div>
+      <div class="stat-card-label">Total Products</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-num" id="statInStock">0</div>
+      <div class="stat-card-label">In Stock</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-card-num" id="statOutStock">0</div>
+      <div class="stat-card-label">Out of Stock</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-card-num" id="statBackorder">0</div>
+      <div class="stat-card-label">On Backorder</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-num" id="statCategories">5</div>
+      <div class="stat-card-label">Categories</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="tabs-row" id="categoryTabs">
+      <button class="cat-tab active" data-cat="all" onclick="filterCategory('all', this)">All</button>
+      <button class="cat-tab" data-cat="handmade" onclick="filterCategory('handmade', this)">Handmade Shoes</button>
+      <button class="cat-tab" data-cat="readymade" onclick="filterCategory('readymade', this)">Ready-Made</button>
+      <button class="cat-tab" data-cat="perfumes" onclick="filterCategory('perfumes', this)">Perfumes</button>
+      <button class="cat-tab" data-cat="bags" onclick="filterCategory('bags', this)">Bags</button>
+      <button class="cat-tab" data-cat="shirts" onclick="filterCategory('shirts', this)">Shirts</button>
+    </div>
+    <input type="text" class="search-box" id="searchBox" placeholder="Search products..." oninput="renderTable()"/>
+  </div>
+
+  <!-- PRODUCT TABLE -->
+  <div class="table-wrap">
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Sizes</th>
+          <th>Availability</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productTableBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#7a7060" stroke-width="1.2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <div class="empty-state-title">No products yet</div>
+      <div>Click "Add Product" above to get started</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADD/EDIT MODAL ═══════════ -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add New Product</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId" value=""/>
+
+      <div class="form-group">
+        <label>Category</label>
+        <select id="pCategory">
+          <option value="handmade">Handmade Shoes</option>
+          <option value="readymade">Ready-Made Shoes</option>
+          <option value="perfumes">Perfumes</option>
+          <option value="bags">Bags</option>
+          <option value="shirts">Shirts</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Product Name</label>
+        <input type="text" id="pName" placeholder="e.g. Female Bow Slipper"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (₦)</label>
+          <input type="number" id="pPrice" placeholder="e.g. 10000"/>
+        </div>
+        <div class="form-group">
+          <label>Old Price — optional</label>
+          <input type="number" id="pOldPrice" placeholder="If on sale"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Sizes Available</label>
+        <div class="size-input-row">
+          <input type="text" id="sizeInput" placeholder="e.g. 38, 39, 40 or S, M, L" onkeypress="if(event.key==='Enter'){event.preventDefault();addSize();}"/>
+          <button class="btn-ghost" onclick="addSize()" type="button">Add</button>
+        </div>
+        <div class="size-chips" id="sizeChips"></div>
+        <div class="form-hint">Type a size and press Enter or click Add. Leave empty if sizes don't apply.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Availability Status</label>
+        <div class="availability-options">
+          <div class="avail-opt selected" data-val="in-stock" onclick="selectAvailability('in-stock')">
+            <span class="avail-opt-label">In Stock</span>
+            <span class="avail-opt-desc">Ready to ship</span>
+          </div>
+          <div class="avail-opt" data-val="out-stock" onclick="selectAvailability('out-stock')">
+            <span class="avail-opt-label">Out of Stock</span>
+            <span class="avail-opt-desc">Not available</span>
+          </div>
+          <div class="avail-opt" data-val="backorder" onclick="selectAvailability('backorder')">
+            <span class="avail-opt-label">Backorder</span>
+            <span class="avail-opt-desc">Can still order</span>
+          </div>
+        </div>
+        <input type="hidden" id="pAvailability" value="in-stock"/>
+        <div class="backorder-field" id="backorderField">
+          <label style="margin-bottom:.4rem">Estimated time to fulfil</label>
+          <input type="text" id="pBackorderTime" placeholder="e.g. 5-7 working days"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Product Photo</label>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="pImage" accept="image/*" onchange="handlePhotoUpload(this)"/>
+          <div class="upload-zone-text">
+            <strong>Tap to upload a photo</strong>
+            Take a photo or choose from gallery
+          </div>
+        </div>
+        <div class="img-preview-wrap" id="imgPreviewWrap">
+          <img id="imgPreview" src="" alt="Preview"/>
+          <button class="img-preview-remove" onclick="removePhoto()">✕</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Note — optional</label>
+        <textarea id="pNote" rows="2" placeholder="e.g. Foreign sole ₦16k · Local sole ₦13k"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DELETE CONFIRM MODAL ═══════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#a23a2e" stroke-width="1.8"><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    </div>
+    <div class="confirm-text">Delete <strong id="deleteProductName"></strong>?<br>This cannot be undone.</div>
+    <div class="modal-footer" style="border-top:none;margin-top:1rem">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-save" style="background:#a23a2e;color:#fff" onclick="confirmDelete()">Delete Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EXPORT MODAL ═══════════ -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-box export-modal">
+    <div class="modal-header">
+      <div class="modal-title">Export Updated Site</div>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Your changes are saved on <strong>this device only</strong>. To make them live for everyone on the website, download the updated file and re-upload it.</p>
+      <ul class="export-steps">
+        <li><span class="num">1</span><span>Click "Download Site File" below — it saves an updated <strong>index.html</strong></span></li>
+        <li><span class="num">2</span><span>Go to your GitHub repo and replace the old <strong>index.html</strong> with this new one</span></li>
+        <li><span class="num">3</span><span>Vercel will redeploy automatically in about 30 seconds</span></li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+      <button class="btn-save" onclick="downloadUpdatedSite()">Download Site File</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const ADMIN_PIN = "rittys2025"; // ← change this to whatever PIN you want
+const STORAGE_KEY = "rittysPalaceProducts";
+
+const CATEGORY_LABELS = {
+  handmade: "Handmade Shoes",
+  readymade: "Ready-Made Shoes",
+  perfumes: "Perfumes",
+  bags: "Bags",
+  shirts: "Shirts"
+};
+
+let products = [];
+let currentFilter = "all";
+let currentSizes = [];
+let currentPhotoData = "";
+let deleteTargetId = null;
+
+// ════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════
+function tryLogin() {
+  const val = document.getElementById('adminPassword').value;
+  if (val === ADMIN_PIN) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').classList.add('show');
+    sessionStorage.setItem('rittysAdminAuth', '1');
+    loadProducts();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('rittysAdminAuth');
+  location.reload();
+}
+
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('rittysAdminAuth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').classList.add('show');
+    loadProducts();
+  }
+});
+
+// ════════════════════════════════════════════════
+// DATA — load / save to localStorage
+// ════════════════════════════════════════════════
+function loadProducts() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  products = saved ? JSON.parse(saved) : [];
+  renderTable();
+  updateStats();
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  renderTable();
+  updateStats();
+}
+
+// ════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('statTotal').textContent = products.length;
+  document.getElementById('statInStock').textContent = products.filter(p => p.availability === 'in-stock').length;
+  document.getElementById('statOutStock').textContent = products.filter(p => p.availability === 'out-stock').length;
+  document.getElementById('statBackorder').textContent = products.filter(p => p.availability === 'backorder').length;
+}
+
+// ════════════════════════════════════════════════
+// FILTER / SEARCH
+// ════════════════════════════════════════════════
+function filterCategory(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ════════════════════════════════════════════════
+// RENDER TABLE
+// ════════════════════════════════════════════════
+function renderTable() {
+  const search = document.getElementById('searchBox').value.toLowerCase();
+  let filtered = products.filter(p => {
+    const matchCat = currentFilter === 'all' || p.category === currentFilter;
+    const matchSearch = !search || p.name.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  const tbody = document.getElementById('productTableBody');
+  const emptyState = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(p => {
+    const img = p.image
+      ? `<img class="prod-thumb" src="${p.image}" alt="${p.name}">`
+      : `<div class="prod-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem">No photo</div>`;
+
+    const sizesHtml = (p.sizes && p.sizes.length)
+      ? `<div class="size-pills">${p.sizes.map(s => `<span class="size-pill">${s}</span>`).join('')}</div>`
+      : `<span style="color:var(--muted);font-size:.75rem">—</span>`;
+
+    const priceHtml = p.oldPrice
+      ? `<span class="price-old">₦${Number(p.oldPrice).toLocaleString()}</span><span class="price-text">₦${Number(p.price).toLocaleString()}</span>`
+      : `<span class="price-text">₦${Number(p.price).toLocaleString()}</span>`;
+
+    let statusHtml = '';
+    if (p.availability === 'in-stock') {
+      statusHtml = `<span class="status-badge in-stock" onclick="cycleStatus('${p.id}')"><span class="status-dot"></span>In Stock</span>`;
+    } else if (p.availability === 'out-stock') {
+      statusHtml = `<span class="status-badge out-stock" onclick="cycleStatus('${p.id}')"><span class="status-dot"></span>Out of Stock</span>`;
+    } else {
+      statusHtml = `<span class="status-badge backorder" onclick="cycleStatus('${p.id}')" title="${p.backorderTime || ''}"><span class="status-dot"></span>Backorder${p.backorderTime ? ' · '+p.backorderTime : ''}</span>`;
+    }
+
+    return `<tr>
+      <td>
+        <div class="prod-name-cell">
+          ${img}
+          <div>
+            <div class="prod-name-text">${p.name}</div>
+            <div class="prod-cat-text">${CATEGORY_LABELS[p.category] || p.category}</div>
+          </div>
+        </div>
+      </td>
+      <td>${priceHtml}</td>
+      <td>${sizesHtml}</td>
+      <td>${statusHtml}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" title="Edit" onclick="editProduct('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Delete" onclick="askDelete('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function cycleStatus(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const order = ['in-stock', 'out-stock', 'backorder'];
+  const next = order[(order.indexOf(p.availability) + 1) % order.length];
+  p.availability = next;
+  if (next === 'backorder' && !p.backorderTime) {
+    const t = prompt("How long until this product is available? (e.g. 5-7 working days)");
+    p.backorderTime = t || 'Contact us for timing';
+  }
+  persist();
+  showToast(`Status updated to "${next.replace('-',' ')}"`);
+}
+
+// ════════════════════════════════════════════════
+// MODAL — ADD / EDIT
+// ════════════════════════════════════════════════
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add New Product';
+  document.getElementById('editId').value = '';
+  document.getElementById('pCategory').value = 'handmade';
+  document.getElementById('pName').value = '';
+  document.getElementById('pPrice').value = '';
+  document.getElementById('pOldPrice').value = '';
+  document.getElementById('pNote').value = '';
+  document.getElementById('pBackorderTime').value = '';
+  currentSizes = [];
+  renderSizeChips();
+  currentPhotoData = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('imgPreview').src = '';
+  selectAvailability('in-stock');
+  document.getElementById('productModal').classList.add('show');
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'Edit Product';
+  document.getElementById('editId').value = p.id;
+  document.getElementById('pCategory').value = p.category;
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pPrice').value = p.price;
+  document.getElementById('pOldPrice').value = p.oldPrice || '';
+  document.getElementById('pNote').value = p.note || '';
+  document.getElementById('pBackorderTime').value = p.backorderTime || '';
+  currentSizes = p.sizes ? [...p.sizes] : [];
+  renderSizeChips();
+  currentPhotoData = p.image || '';
+  if (currentPhotoData) {
+    document.getElementById('imgPreview').src = currentPhotoData;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+  } else {
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+  }
+  selectAvailability(p.availability || 'in-stock');
+  document.getElementById('productModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('productModal').classList.remove('show');
+}
+
+function selectAvailability(val) {
+  document.getElementById('pAvailability').value = val;
+  document.querySelectorAll('.avail-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.val === val);
+  });
+  document.getElementById('backorderField').classList.toggle('show', val === 'backorder');
+}
+
+function addSize() {
+  const input = document.getElementById('sizeInput');
+  const val = input.value.trim();
+  if (!val) return;
+  // Support comma-separated multiple sizes at once
+  val.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+    if (!currentSizes.includes(s)) currentSizes.push(s);
+  });
+  input.value = '';
+  renderSizeChips();
+}
+
+function removeSize(size) {
+  currentSizes = currentSizes.filter(s => s !== size);
+  renderSizeChips();
+}
+
+function renderSizeChips() {
+  const wrap = document.getElementById('sizeChips');
+  wrap.innerHTML = currentSizes.map(s =>
+    `<span class="size-chip">${s}<button onclick="removeSize('${s}')">✕</button></span>`
+  ).join('');
+}
+
+function handlePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentPhotoData = e.target.result;
+    document.getElementById('imgPreview').src = currentPhotoData;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  currentPhotoData = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('pImage').value = '';
+}
+
+function saveProduct() {
+  const name = document.getElementById('pName').value.trim();
+  const price = document.getElementById('pPrice').value;
+  if (!name) { showToast('Please enter a product name'); return; }
+  if (!price) { showToast('Please enter a price'); return; }
+
+  const editId = document.getElementById('editId').value;
+  const data = {
+    id: editId || ('p_' + Date.now()),
+    category: document.getElementById('pCategory').value,
+    name: name,
+    price: Number(price),
+    oldPrice: document.getElementById('pOldPrice').value ? Number(document.getElementById('pOldPrice').value) : null,
+    sizes: [...currentSizes],
+    availability: document.getElementById('pAvailability').value,
+    backorderTime: document.getElementById('pBackorderTime').value.trim(),
+    note: document.getElementById('pNote').value.trim(),
+    image: currentPhotoData
+  };
+
+  if (editId) {
+    const idx = products.findIndex(p => p.id === editId);
+    products[idx] = data;
+    showToast(`"${name}" updated`);
+  } else {
+    products.push(data);
+    showToast(`"${name}" added to catalog`);
+  }
+
+  persist();
+  closeModal();
+}
+
+// ════════════════════════════════════════════════
+// DELETE
+// ════════════════════════════════════════════════
+function askDelete(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  deleteTargetId = id;
+  document.getElementById('deleteProductName').textContent = p.name;
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  deleteTargetId = null;
+}
+
+function confirmDelete() {
+  products = products.filter(p => p.id !== deleteTargetId);
+  persist();
+  closeDeleteModal();
+  showToast('Product deleted');
+}
+
+// ════════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════════
+function openExportModal() {
+  document.getElementById('exportModal').classList.add('show');
+}
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('show');
+}
+
+function downloadUpdatedSite() {
+  // Export the products as a JSON file the developer/site can merge in
+  // (Full site regeneration happens on Claude's side from this export)
+  const dataStr = JSON.stringify(products, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rittys-palace-products.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Product data downloaded — send this file to update the live site');
+  closeExportModal();
+}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
