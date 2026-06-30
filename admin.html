@@ -203,6 +203,25 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
 .size-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;padding:0}
 .size-chip button:hover{color:#e08070}
 
+.all-sizes-toggle{
+  display:flex;align-items:center;gap:.9rem;background:rgba(200,151,42,.05);
+  border:1px solid rgba(200,151,42,.18);padding:.8rem 1rem;cursor:pointer;
+  transition:all .2s;margin-bottom:.9rem;
+}
+.all-sizes-toggle:hover{border-color:rgba(200,151,42,.35)}
+.all-sizes-toggle.active{background:rgba(200,151,42,.12);border-color:var(--gold)}
+.all-sizes-checkbox{
+  width:22px;height:22px;border:1.5px solid rgba(200,151,42,.4);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.all-sizes-checkbox svg{width:13px;height:13px;opacity:0;transition:opacity .15s}
+.all-sizes-toggle.active .all-sizes-checkbox{background:var(--gold);border-color:var(--gold)}
+.all-sizes-toggle.active .all-sizes-checkbox svg{opacity:1}
+.all-sizes-label{font-size:.82rem;color:var(--cream);font-weight:500}
+.all-sizes-desc{font-size:.68rem;color:var(--muted);margin-top:.1rem}
+#specificSizesWrap{transition:opacity .2s}
+#specificSizesWrap.disabled{opacity:.35;pointer-events:none}
+
 .upload-zone{
   border:1.5px dashed rgba(200,151,42,.3);padding:1.5rem;text-align:center;
   cursor:pointer;position:relative;transition:all .2s;background:rgba(200,151,42,.02);
@@ -404,12 +423,23 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
 
       <div class="form-group">
         <label>Sizes Available</label>
-        <div class="size-input-row">
-          <input type="text" id="sizeInput" placeholder="e.g. 38, 39, 40 or S, M, L" onkeypress="if(event.key==='Enter'){event.preventDefault();addSize();}"/>
-          <button class="btn-ghost" onclick="addSize()" type="button">Add</button>
+        <div class="all-sizes-toggle" onclick="toggleAllSizes()" id="allSizesToggle">
+          <div class="all-sizes-checkbox" id="allSizesCheckbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a08" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="all-sizes-label">Available in all sizes</div>
+            <div class="all-sizes-desc">Toggle this if this product comes in every size</div>
+          </div>
         </div>
-        <div class="size-chips" id="sizeChips"></div>
-        <div class="form-hint">Type a size and press Enter or click Add. Leave empty if sizes don't apply.</div>
+        <div id="specificSizesWrap">
+          <div class="size-input-row">
+            <input type="text" id="sizeInput" placeholder="e.g. 38, 39, 40 or S, M, L" onkeypress="if(event.key==='Enter'){event.preventDefault();addSize();}"/>
+            <button class="btn-ghost" onclick="addSize()" type="button">Add</button>
+          </div>
+          <div class="size-chips" id="sizeChips"></div>
+          <div class="form-hint">Type a size and press Enter or click Add. Leave empty if sizes don't apply.</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -518,8 +548,15 @@ const CATEGORY_LABELS = {
 let products = [];
 let currentFilter = "all";
 let currentSizes = [];
+let currentAllSizes = false;
 let currentPhotoData = "";
 let deleteTargetId = null;
+
+function toggleAllSizes() {
+  currentAllSizes = !currentAllSizes;
+  document.getElementById('allSizesToggle').classList.toggle('active', currentAllSizes);
+  document.getElementById('specificSizesWrap').classList.toggle('disabled', currentAllSizes);
+}
 
 // ════════════════════════════════════════════════
 // AUTH
@@ -611,9 +648,11 @@ function renderTable() {
       ? `<img class="prod-thumb" src="${p.image}" alt="${p.name}">`
       : `<div class="prod-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem">No photo</div>`;
 
-    const sizesHtml = (p.sizes && p.sizes.length)
-      ? `<div class="size-pills">${p.sizes.map(s => `<span class="size-pill">${s}</span>`).join('')}</div>`
-      : `<span style="color:var(--muted);font-size:.75rem">—</span>`;
+    const sizesHtml = p.allSizes
+      ? `<span class="size-pill" style="background:rgba(200,151,42,.18);border-color:rgba(200,151,42,.4);color:var(--gold2)">All Sizes</span>`
+      : (p.sizes && p.sizes.length)
+        ? `<div class="size-pills">${p.sizes.map(s => `<span class="size-pill">${s}</span>`).join('')}</div>`
+        : `<span style="color:var(--muted);font-size:.75rem">—</span>`;
 
     const priceHtml = p.oldPrice
       ? `<span class="price-old">₦${Number(p.oldPrice).toLocaleString()}</span><span class="price-text">₦${Number(p.price).toLocaleString()}</span>`
@@ -683,6 +722,9 @@ function openAddModal() {
   document.getElementById('pBackorderTime').value = '';
   currentSizes = [];
   renderSizeChips();
+  currentAllSizes = false;
+  document.getElementById('allSizesToggle').classList.remove('active');
+  document.getElementById('specificSizesWrap').classList.remove('disabled');
   currentPhotoData = '';
   document.getElementById('imgPreviewWrap').style.display = 'none';
   document.getElementById('imgPreview').src = '';
@@ -703,6 +745,9 @@ function editProduct(id) {
   document.getElementById('pBackorderTime').value = p.backorderTime || '';
   currentSizes = p.sizes ? [...p.sizes] : [];
   renderSizeChips();
+  currentAllSizes = !!p.allSizes;
+  document.getElementById('allSizesToggle').classList.toggle('active', currentAllSizes);
+  document.getElementById('specificSizesWrap').classList.toggle('disabled', currentAllSizes);
   currentPhotoData = p.image || '';
   if (currentPhotoData) {
     document.getElementById('imgPreview').src = currentPhotoData;
@@ -781,7 +826,8 @@ function saveProduct() {
     name: name,
     price: Number(price),
     oldPrice: document.getElementById('pOldPrice').value ? Number(document.getElementById('pOldPrice').value) : null,
-    sizes: [...currentSizes],
+    sizes: currentAllSizes ? [] : [...currentSizes],
+    allSizes: currentAllSizes,
     availability: document.getElementById('pAvailability').value,
     backorderTime: document.getElementById('pBackorderTime').value.trim(),
     note: document.getElementById('pNote').value.trim(),
