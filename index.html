@@ -467,9 +467,53 @@ footer{background:#070706;color:var(--muted);padding:4.5rem 4rem 2rem;border-top
   background:rgba(200,151,42,.1);border:1px solid rgba(200,151,42,.2);
   padding:.15rem .5rem;
 }
+
+/* ── BIRTHDAY COUNTDOWN ── */
+.countdown-bar{
+  background:linear-gradient(90deg,#5a0000,#8b0000,#c8972a,#8b0000,#5a0000);
+  background-size:300% 100%;animation:shimmer 3s linear infinite;
+  padding:.6rem 2rem;text-align:center;position:relative;
+  border-bottom:1px solid rgba(200,151,42,.3);
+}
+.countdown-inner{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap}
+.countdown-label{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.8);font-family:'Jost',sans-serif}
+.countdown-timer{display:flex;align-items:center;gap:.4rem}
+.countdown-unit{text-align:center;min-width:42px}
+.countdown-num{
+  font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;
+  color:#fff;display:block;line-height:1;
+  background:rgba(0,0,0,.25);padding:.2rem .5rem;
+}
+.countdown-unit-label{font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:.2rem;display:block}
+.countdown-sep{color:rgba(255,255,255,.5);font-size:1.2rem;font-weight:700;margin-bottom:.8rem}
+.countdown-ended{font-family:'Playfair Display',serif;font-size:.9rem;color:var(--gold2);font-style:italic}
 </style>
 </head>
 <body>
+
+<!-- BIRTHDAY COUNTDOWN -->
+<div class="countdown-bar" id="countdownBar">
+  <div class="countdown-inner">
+    <span class="countdown-label">🎂 Birthday Sale Ends In</span>
+    <div class="countdown-timer">
+      <div class="countdown-unit">
+        <span class="countdown-num" id="cdHours">00</span>
+        <span class="countdown-unit-label">Hrs</span>
+      </div>
+      <span class="countdown-sep">:</span>
+      <div class="countdown-unit">
+        <span class="countdown-num" id="cdMins">00</span>
+        <span class="countdown-unit-label">Min</span>
+      </div>
+      <span class="countdown-sep">:</span>
+      <div class="countdown-unit">
+        <span class="countdown-num" id="cdSecs">00</span>
+        <span class="countdown-unit-label">Sec</span>
+      </div>
+    </div>
+    <span class="countdown-label">🛍️ Last chance for birthday prices!</span>
+  </div>
+</div>
 
 <!-- CART OVERLAY & DRAWER -->
 
@@ -1740,6 +1784,89 @@ const revealObserver=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e
 document.querySelectorAll('.cat-card,.testi-card,.feat-card,.about-strip,.cac-section').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(22px)';el.style.transition='opacity .55s ease,transform .55s ease';revealObserver.observe(el)});
 
 renderAll();
+
+// ══════════════════════════════════════════
+// BIRTHDAY SALE COUNTDOWN
+// Deadline: 12:00 PM WAT (UTC+1) July 6 2026
+// ══════════════════════════════════════════
+const SALE_DEADLINE = new Date('2026-07-06T11:00:00Z'); // 12:00 WAT = 11:00 UTC
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = SALE_DEADLINE - now;
+
+  if (diff <= 0) {
+    endBirthdaySale();
+    return;
+  }
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const secs  = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const pad = n => String(n).padStart(2,'0');
+  const cdH = document.getElementById('cdHours');
+  const cdM = document.getElementById('cdMins');
+  const cdS = document.getElementById('cdSecs');
+  if(cdH) cdH.textContent = pad(hours);
+  if(cdM) cdM.textContent = pad(mins);
+  if(cdS) cdS.textContent = pad(secs);
+}
+
+function endBirthdaySale() {
+  // ── 1. Stop countdown interval ──
+  clearInterval(countdownInterval);
+
+  // ── 2. Hide countdown bar ──
+  const bar = document.getElementById('countdownBar');
+  if(bar) bar.style.display = 'none';
+
+  // ── 3. Hide promo bar ──
+  const promoBar = document.getElementById('promoBar');
+  if(promoBar) promoBar.style.display = 'none';
+  // Adjust nav back since promo bar is gone
+  const nav = document.querySelector('nav');
+  if(nav) nav.style.top = '0';
+  const hero = document.querySelector('.hero');
+  if(hero) hero.style.paddingTop = '74px';
+
+  // ── 4. Hide birthday popup if open ──
+  const popup = document.getElementById('bdayModal');
+  if(popup) popup.style.display = 'none';
+
+  // ── 5. Revert all sale prices ──
+  // Remove oldLabel from each product — making current label the full price
+  ALL_PRODUCTS.forEach(p => {
+    if (p.oldLabel) {
+      // oldLabel was the original price — restore it as the main price
+      // and remove the sale price
+      p.label = p.oldLabel;
+      // Parse the number from label like "₦12,000"
+      const numStr = p.oldLabel.replace(/[^\d]/g,'');
+      p.price = parseInt(numStr) || p.price;
+      delete p.oldLabel;
+    }
+  });
+
+  // ── 6. Also remove "Sale" badges from product cards ──
+  // Re-render all product grids
+  renderAll();
+
+  // ── 7. Show a small "Sale has ended" notice in marquee ──
+  const marquee = document.querySelector('.marquee-track');
+  if(marquee) {
+    const item = document.createElement('span');
+    item.className = 'marquee-item';
+    item.textContent = 'Birthday Sale Has Ended ✦';
+    marquee.prepend(item);
+  }
+
+  console.log('Birthday sale ended — prices reverted.');
+}
+
+// Start countdown
+const countdownInterval = setInterval(updateCountdown, 1000);
+updateCountdown(); // run immediately on load
 
 // ── CUSTOM ORDER FORM ──
 let uploadedImageName = '';
