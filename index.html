@@ -21,7 +21,7 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);ov
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");opacity:.4}
 
 /* NAV */
-nav{position:fixed;top:36px;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1rem 3.5rem;background:rgba(10,10,8,.93);backdrop-filter:blur(16px);border-bottom:1px solid rgba(200,151,42,.2)}
+nav{position:fixed;top:72px;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1rem 3.5rem;background:rgba(10,10,8,.93);backdrop-filter:blur(16px);border-bottom:1px solid rgba(200,151,42,.2)}
 .nav-logo{display:flex;align-items:center;gap:.8rem;text-decoration:none}
 .nav-logo img{width:44px;height:44px;object-fit:contain;border-radius:50%;border:1px solid rgba(200,151,42,.3)}
 .nav-logo-text{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold2);letter-spacing:.04em;line-height:1.1}
@@ -66,7 +66,7 @@ nav{position:fixed;top:36px;left:0;right:0;z-index:200;display:flex;align-items:
 .checkout-wa svg,.wa-svg{width:17px;height:17px;fill:#fff;flex-shrink:0}
 
 /* HERO */
-.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;padding-top:110px}
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;padding-top:148px}
 .hero-left{display:flex;flex-direction:column;justify-content:center;padding:5rem 3.5rem 5rem 4rem;background:var(--black);position:relative;overflow:hidden;animation:fadeUp .9s ease both}
 .hero-left::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(200,151,42,.07) 0%,transparent 65%);pointer-events:none}
 .hero-eyebrow{display:flex;align-items:center;gap:.8rem;margin-bottom:1.8rem}
@@ -492,26 +492,26 @@ footer{background:#070706;color:var(--muted);padding:4.5rem 4rem 2rem;border-top
 <body>
 
 <!-- BIRTHDAY COUNTDOWN -->
-<div class="countdown-bar" id="countdownBar">
-  <div class="countdown-inner">
-    <span class="countdown-label">🎂 Birthday Sale Ends In</span>
-    <div class="countdown-timer">
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdHours">00</span>
-        <span class="countdown-unit-label">Hrs</span>
+<div class="countdown-bar" id="countdownBar" style="background:#1a0000;border-bottom:1px solid rgba(200,151,42,.35);padding:.55rem 1rem;text-align:center;z-index:199;position:relative">
+  <div style="display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap">
+    <span style="font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75);font-family:'Jost',sans-serif">⏰ Sale ends today 12PM</span>
+    <div style="display:flex;align-items:center;gap:.3rem">
+      <div style="text-align:center">
+        <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold2);background:rgba(200,151,42,.15);padding:.15rem .5rem;display:inline-block;min-width:36px" id="cdHours">00</span>
+        <span style="font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block">hrs</span>
       </div>
-      <span class="countdown-sep">:</span>
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdMins">00</span>
-        <span class="countdown-unit-label">Min</span>
+      <span style="color:var(--gold);font-size:1.1rem;font-weight:700;margin-bottom:.8rem">:</span>
+      <div style="text-align:center">
+        <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold2);background:rgba(200,151,42,.15);padding:.15rem .5rem;display:inline-block;min-width:36px" id="cdMins">00</span>
+        <span style="font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block">min</span>
       </div>
-      <span class="countdown-sep">:</span>
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdSecs">00</span>
-        <span class="countdown-unit-label">Sec</span>
+      <span style="color:var(--gold);font-size:1.1rem;font-weight:700;margin-bottom:.8rem">:</span>
+      <div style="text-align:center">
+        <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold2);background:rgba(200,151,42,.15);padding:.15rem .5rem;display:inline-block;min-width:36px" id="cdSecs">00</span>
+        <span style="font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block">sec</span>
       </div>
     </div>
-    <span class="countdown-label">🛍️ Last chance for birthday prices!</span>
+    <span style="font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75);font-family:'Jost',sans-serif">🛍️ Last chance for sale prices!</span>
   </div>
 </div>
 
@@ -521,7 +521,7 @@ footer{background:#070706;color:var(--muted);padding:4.5rem 4rem 2rem;border-top
 <div class="promo-bar" id="promoBar">
   <div class="promo-bar-text">
     🎂 <strong>RITTY'S BIRTHDAY SALE!</strong> &nbsp;|&nbsp; Special discounts on ALL products &nbsp;|&nbsp;
-    📅 <strong>1st – 5th July</strong> &nbsp;|&nbsp;
+    📅 <strong>Extended to 6th July — Ends 12PM today!</strong> &nbsp;|&nbsp;
     <a onclick="document.getElementById('bdayModal').classList.remove('hidden')">See Deals →</a>
   </div>
   <button class="promo-bar-close" onclick="closePromoBar()" title="Close">✕</button>
@@ -1824,7 +1824,7 @@ function endBirthdaySale() {
   // ── 3. Hide promo bar ──
   const promoBar = document.getElementById('promoBar');
   if(promoBar) promoBar.style.display = 'none';
-  // Adjust nav back since promo bar is gone
+  // Both bars gone — reset nav and hero to normal
   const nav = document.querySelector('nav');
   if(nav) nav.style.top = '0';
   const hero = document.querySelector('.hero');
@@ -1864,9 +1864,17 @@ function endBirthdaySale() {
   console.log('Birthday sale ended — prices reverted.');
 }
 
-// Start countdown
-const countdownInterval = setInterval(updateCountdown, 1000);
-updateCountdown(); // run immediately on load
+// Start countdown — wait for DOM to be ready
+let countdownInterval;
+function startCountdown() {
+  updateCountdown(); // run immediately
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startCountdown);
+} else {
+  startCountdown();
+}
 
 // ── CUSTOM ORDER FORM ──
 let uploadedImageName = '';
@@ -1918,9 +1926,13 @@ function closePromoBar(){
   bar.style.transition = 'transform .3s ease, opacity .3s ease';
   bar.style.transform = 'translateY(-100%)';
   bar.style.opacity = '0';
-  setTimeout(()=>{ bar.style.display='none';
-    document.querySelector('nav').style.top='0';
-    document.querySelector('.hero').style.paddingTop='74px';
+  setTimeout(()=>{
+    bar.style.display='none';
+    // Countdown bar is still showing — nav sits below it only
+    const cdBar = document.getElementById('countdownBar');
+    const cdHeight = cdBar && cdBar.style.display !== 'none' ? cdBar.offsetHeight : 0;
+    document.querySelector('nav').style.top = cdHeight + 'px';
+    document.querySelector('.hero').style.paddingTop = (74 + cdHeight) + 'px';
   }, 300);
 }
 
