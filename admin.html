@@ -84,7 +84,7 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
 
 /* DASHBOARD STATS */
 .dash-stats{
-  display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;
   padding:1.5rem 2rem;
 }
 .stat-card{
@@ -277,7 +277,7 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
 
 /* RESPONSIVE */
 @media(max-width:900px){
-  .dash-stats{grid-template-columns:repeat(2,1fr);padding:1rem}
+  .dash-stats{grid-template-columns:repeat(3,1fr);padding:1rem}
   .topbar{padding:.9rem 1rem;flex-wrap:wrap;gap:.6rem}
   .toolbar{padding:0 1rem 1rem}
   .table-wrap{padding:0 1rem 2rem}
@@ -347,6 +347,13 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
       <div class="stat-card-num" id="statCategories">5</div>
       <div class="stat-card-label">Categories</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-card-num" id="statStorage">0%</div>
+      <div class="stat-card-label">Storage Used</div>
+    </div>
+  </div>
+  <div style="padding:0 2rem 1rem;font-size:.7rem;color:var(--muted);line-height:1.6">
+    ⚠️ Browser storage is limited (~10-15 products with photos). When "Storage Used" gets close to 100%, export your products and ask your developer to clear this panel before adding more.
   </div>
 
   <!-- TOOLBAR -->
@@ -597,16 +604,41 @@ function loadProducts() {
 }
 
 function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  renderTable();
-  updateStats();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    renderTable();
+    updateStats();
+    return true;
+  } catch (err) {
+    console.error('Storage error:', err);
+    // Roll back the in-memory array to match what's actually saved
+    const saved = localStorage.getItem(STORAGE_KEY);
+    products = saved ? JSON.parse(saved) : [];
+    renderTable();
+    updateStats();
+    showToast('⚠️ Storage full! This product was NOT saved. Please export your current products now, then clear old ones.');
+    alert('STORAGE FULL — This product could not be saved because your browser storage is full.\n\nYour browser can only hold about 10-15 products with photos.\n\nWhat to do now:\n1. Click "Export Updated Site" to download what you have\n2. Send that file to your developer\n3. They will clear this admin panel so you can continue adding fresh\n\nThis product was NOT added — please try again after clearing.');
+    return false;
+  }
 }
 
 // ════════════════════════════════════════════════
 // STATS
 // ════════════════════════════════════════════════
+function getStorageUsedKB() {
+  const data = localStorage.getItem(STORAGE_KEY) || '';
+  return Math.round(new Blob([data]).size / 1024);
+}
+
 function updateStats() {
   document.getElementById('statTotal').textContent = products.length;
+  const usedKB = getStorageUsedKB();
+  const usedPct = Math.min(100, Math.round((usedKB / 5120) * 100)); // assume ~5MB typical quota
+  const storageEl = document.getElementById('statStorage');
+  if (storageEl) {
+    storageEl.textContent = usedPct + '%';
+    storageEl.parentElement.classList.toggle('warn', usedPct > 70);
+  }
   document.getElementById('statInStock').textContent = products.filter(p => p.availability === 'in-stock').length;
   document.getElementById('statOutStock').textContent = products.filter(p => p.availability === 'out-stock').length;
   document.getElementById('statBackorder').textContent = products.filter(p => p.availability === 'backorder').length;
@@ -800,9 +832,23 @@ function handlePhotoUpload(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    currentPhotoData = e.target.result;
-    document.getElementById('imgPreview').src = currentPhotoData;
-    document.getElementById('imgPreviewWrap').style.display = 'block';
+    // Compress image before storing to save space (max 700px wide, JPEG 70%)
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 700;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * (maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      currentPhotoData = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('imgPreview').src = currentPhotoData;
+      document.getElementById('imgPreviewWrap').style.display = 'block';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -834,17 +880,21 @@ function saveProduct() {
     image: currentPhotoData
   };
 
+  const wasEdit = !!editId;
   if (editId) {
     const idx = products.findIndex(p => p.id === editId);
     products[idx] = data;
-    showToast(`"${name}" updated`);
   } else {
     products.push(data);
-    showToast(`"${name}" added to catalog`);
   }
 
-  persist();
-  closeModal();
+  const success = persist();
+  if (success) {
+    showToast(wasEdit ? `"${name}" updated` : `"${name}" added to catalog`);
+    closeModal();
+  }
+  // If not successful, persist() already showed the storage-full warning
+  // and rolled back — modal stays open so user doesn't lose their filled-in data
 }
 
 // ════════════════════════════════════════════════
