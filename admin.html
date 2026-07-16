@@ -316,7 +316,7 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
       </div>
     </div>
     <div class="topbar-actions">
-      <button class="btn-ghost" onclick="openExportModal()">Export Updated Site</button>
+      <button class="btn-ghost" onclick="openExportModal()">Backup Products</button>
       <button class="btn-ghost" onclick="logout()">Log Out</button>
       <button class="btn-gold-sm" onclick="openAddModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -517,32 +517,32 @@ body{font-family:'Jost',sans-serif;background:var(--black);color:var(--cream);mi
 <div class="modal-overlay" id="exportModal">
   <div class="modal-box export-modal">
     <div class="modal-header">
-      <div class="modal-title">Export Updated Site</div>
+      <div class="modal-title">Backup Your Products</div>
       <button class="modal-close" onclick="closeExportModal()">✕</button>
     </div>
     <div class="modal-body">
-      <p>Your changes are saved on <strong>this device only</strong>. To make them live for everyone on the website, download the updated file and re-upload it.</p>
-      <ul class="export-steps">
-        <li><span class="num">1</span><span>Click "Download Site File" below — it saves an updated <strong>index.html</strong></span></li>
-        <li><span class="num">2</span><span>Go to your GitHub repo and replace the old <strong>index.html</strong> with this new one</span></li>
-        <li><span class="num">3</span><span>Vercel will redeploy automatically in about 30 seconds</span></li>
-      </ul>
+      <p>✅ Good news — all your changes are already <strong>live on the website instantly</strong>. No need to download or re-upload anything!</p>
+      <p style="margin-top:1rem">This button just saves an optional backup copy of your product list as a file, in case you ever want a record of everything outside the system.</p>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeExportModal()">Cancel</button>
-      <button class="btn-save" onclick="downloadUpdatedSite()">Download Site File</button>
+      <button class="btn-cancel" onclick="closeExportModal()">Close</button>
+      <button class="btn-save" onclick="downloadUpdatedSite()">Download Backup</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════
 const ADMIN_PIN = "rittys2025"; // ← change this to whatever PIN you want
-const STORAGE_KEY = "rittysPalaceProducts";
+
+const SUPABASE_URL = "https://jyltwhjgzzlaazqmzkks.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5bHR3aGpnenpsYWF6cW16a2tzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMDE5NDQsImV4cCI6MjA5OTY3Nzk0NH0.0H2CGUjzgi9tkIcC-9mdWUgkAdvyFd5Qz9VZDybb-X4";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CATEGORY_LABELS = {
   handmade: "Handmade Shoes",
@@ -594,50 +594,50 @@ window.addEventListener('load', () => {
 });
 
 // ════════════════════════════════════════════════
-// DATA — load / save to localStorage
+// DATA — load / save via Supabase
 // ════════════════════════════════════════════════
-function loadProducts() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  products = saved ? JSON.parse(saved) : [];
+function mapRowToProduct(row) {
+  return {
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    price: row.price,
+    oldPrice: row.old_price,
+    sizes: row.sizes || [],
+    allSizes: row.all_sizes || false,
+    availability: row.availability || 'in-stock',
+    backorderTime: row.backorder_time || '',
+    note: row.note || '',
+    image: row.image_url,
+    badge: row.badge || 'new',
+    stars: row.stars || 5,
+    bagType: row.bag_type || null
+  };
+}
+
+async function loadProducts() {
+  const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: true });
+  if (error) {
+    showToast('⚠️ Could not load products: ' + error.message);
+    console.error(error);
+    products = [];
+  } else {
+    products = data.map(mapRowToProduct);
+  }
   renderTable();
   updateStats();
 }
 
-function persist() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-    renderTable();
-    updateStats();
-    return true;
-  } catch (err) {
-    console.error('Storage error:', err);
-    // Roll back the in-memory array to match what's actually saved
-    const saved = localStorage.getItem(STORAGE_KEY);
-    products = saved ? JSON.parse(saved) : [];
-    renderTable();
-    updateStats();
-    showToast('⚠️ Storage full! This product was NOT saved. Please export your current products now, then clear old ones.');
-    alert('STORAGE FULL — This product could not be saved because your browser storage is full.\n\nYour browser can only hold about 10-15 products with photos.\n\nWhat to do now:\n1. Click "Export Updated Site" to download what you have\n2. Send that file to your developer\n3. They will clear this admin panel so you can continue adding fresh\n\nThis product was NOT added — please try again after clearing.');
-    return false;
-  }
-}
 
 // ════════════════════════════════════════════════
 // STATS
 // ════════════════════════════════════════════════
-function getStorageUsedKB() {
-  const data = localStorage.getItem(STORAGE_KEY) || '';
-  return Math.round(new Blob([data]).size / 1024);
-}
-
 function updateStats() {
   document.getElementById('statTotal').textContent = products.length;
-  const usedKB = getStorageUsedKB();
-  const usedPct = Math.min(100, Math.round((usedKB / 5120) * 100)); // assume ~5MB typical quota
   const storageEl = document.getElementById('statStorage');
   if (storageEl) {
-    storageEl.textContent = usedPct + '%';
-    storageEl.parentElement.classList.toggle('warn', usedPct > 70);
+    storageEl.textContent = '☁️ Live';
+    storageEl.parentElement.classList.remove('warn');
   }
   document.getElementById('statInStock').textContent = products.filter(p => p.availability === 'in-stock').length;
   document.getElementById('statOutStock').textContent = products.filter(p => p.availability === 'out-stock').length;
@@ -726,18 +726,28 @@ function renderTable() {
   }).join('');
 }
 
-function cycleStatus(id) {
+async function cycleStatus(id) {
   const p = products.find(x => x.id === id);
   if (!p) return;
   const order = ['in-stock', 'out-stock', 'backorder'];
   const next = order[(order.indexOf(p.availability) + 1) % order.length];
-  p.availability = next;
-  if (next === 'backorder' && !p.backorderTime) {
+  let backorderTime = p.backorderTime;
+  if (next === 'backorder' && !backorderTime) {
     const t = prompt("How long until this product is available? (e.g. 5-7 working days)");
-    p.backorderTime = t || 'Contact us for timing';
+    backorderTime = t || 'Contact us for timing';
   }
-  persist();
+  const { error } = await supabaseClient.from('products').update({
+    availability: next,
+    backorder_time: next === 'backorder' ? backorderTime : p.backorderTime
+  }).eq('id', id);
+
+  if (error) {
+    showToast('⚠️ Update failed: ' + error.message);
+    console.error(error);
+    return;
+  }
   showToast(`Status updated to "${next.replace('-',' ')}"`);
+  await loadProducts();
 }
 
 // ════════════════════════════════════════════════
@@ -859,42 +869,78 @@ function removePhoto() {
   document.getElementById('pImage').value = '';
 }
 
-function saveProduct() {
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], {type: mime});
+}
+
+async function uploadImageIfNeeded(photoData) {
+  // If it's already a hosted URL (unchanged during edit), keep it as-is
+  if (!photoData || !photoData.startsWith('data:')) return photoData;
+  const blob = dataURLtoBlob(photoData);
+  const fileName = `product_${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+  const { error: uploadErr } = await supabaseClient.storage.from('product-images').upload(fileName, blob, { contentType: 'image/jpeg' });
+  if (uploadErr) {
+    console.error('Image upload failed:', uploadErr);
+    showToast('⚠️ Image upload failed: ' + uploadErr.message);
+    return null;
+  }
+  const { data: urlData } = supabaseClient.storage.from('product-images').getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
+async function saveProduct() {
   const name = document.getElementById('pName').value.trim();
   const price = document.getElementById('pPrice').value;
   if (!name) { showToast('Please enter a product name'); return; }
   if (!price) { showToast('Please enter a price'); return; }
 
+  const saveBtn = document.querySelector('.btn-save');
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = 'Saving...';
+  saveBtn.disabled = true;
+
   const editId = document.getElementById('editId').value;
-  const data = {
-    id: editId || ('p_' + Date.now()),
+  const imageUrl = await uploadImageIfNeeded(currentPhotoData);
+
+  const row = {
     category: document.getElementById('pCategory').value,
     name: name,
     price: Number(price),
-    oldPrice: document.getElementById('pOldPrice').value ? Number(document.getElementById('pOldPrice').value) : null,
+    old_price: document.getElementById('pOldPrice').value ? Number(document.getElementById('pOldPrice').value) : null,
     sizes: currentAllSizes ? [] : [...currentSizes],
-    allSizes: currentAllSizes,
+    all_sizes: currentAllSizes,
     availability: document.getElementById('pAvailability').value,
-    backorderTime: document.getElementById('pBackorderTime').value.trim(),
+    backorder_time: document.getElementById('pBackorderTime').value.trim(),
     note: document.getElementById('pNote').value.trim(),
-    image: currentPhotoData
+    image_url: imageUrl
   };
 
   const wasEdit = !!editId;
+  let error;
   if (editId) {
-    const idx = products.findIndex(p => p.id === editId);
-    products[idx] = data;
+    ({ error } = await supabaseClient.from('products').update(row).eq('id', editId));
   } else {
-    products.push(data);
+    ({ error } = await supabaseClient.from('products').insert(row));
   }
 
-  const success = persist();
-  if (success) {
-    showToast(wasEdit ? `"${name}" updated` : `"${name}" added to catalog`);
-    closeModal();
+  saveBtn.textContent = originalText;
+  saveBtn.disabled = false;
+
+  if (error) {
+    showToast('⚠️ Save failed: ' + error.message);
+    console.error(error);
+    return;
   }
-  // If not successful, persist() already showed the storage-full warning
-  // and rolled back — modal stays open so user doesn't lose their filled-in data
+
+  showToast(wasEdit ? `"${name}" updated` : `"${name}" added to catalog`);
+  closeModal();
+  await loadProducts();
 }
 
 // ════════════════════════════════════════════════
@@ -913,11 +959,16 @@ function closeDeleteModal() {
   deleteTargetId = null;
 }
 
-function confirmDelete() {
-  products = products.filter(p => p.id !== deleteTargetId);
-  persist();
+async function confirmDelete() {
+  const { error } = await supabaseClient.from('products').delete().eq('id', deleteTargetId);
   closeDeleteModal();
+  if (error) {
+    showToast('⚠️ Delete failed: ' + error.message);
+    console.error(error);
+    return;
+  }
   showToast('Product deleted');
+  await loadProducts();
 }
 
 // ════════════════════════════════════════════════
@@ -931,17 +982,15 @@ function closeExportModal() {
 }
 
 function downloadUpdatedSite() {
-  // Export the products as a JSON file the developer/site can merge in
-  // (Full site regeneration happens on Claude's side from this export)
   const dataStr = JSON.stringify(products, null, 2);
   const blob = new Blob([dataStr], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'rittys-palace-products.json';
+  a.download = `rittys-palace-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Product data downloaded — send this file to update the live site');
+  showToast('Backup downloaded');
   closeExportModal();
 }
 
